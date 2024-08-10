@@ -5,9 +5,14 @@ import java.awt.event.WindowEvent;
 import java.awt.*;
 import java.io.*;
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.BadLocationException;
 
-public class Landing implements ActionListener {
+public class Landing implements ActionListener, CaretListener {
+
     JFrame frame = new JFrame();
     JMenuBar mb = new JMenuBar();
     JMenu fileMenu, editMenu, aboutMenu;
@@ -18,13 +23,12 @@ public class Landing implements ActionListener {
             
     JTextArea textarea = new JTextArea();
     JScrollPane editorScrollPane = new JScrollPane(textarea);
-
-    
-    
-    
+    JPanel statusPanel = new JPanel();
+    JLabel statusLabel = new JLabel();
+     
     Landing() {
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        frame.setTitle("Isaac's Text Editor");
+        frame.setTitle("New Document - Isaac's Text Editor");
         frame.setSize(1024,726);
         Image icon = new ImageIcon(this.getClass().getResource("./assets/scroll.png")).getImage();
         frame.setIconImage(icon);
@@ -70,8 +74,18 @@ public class Landing implements ActionListener {
         mb.add(editMenu);
         mb.add(aboutMenu);
 
+        // Status Bar
+        statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
+        statusPanel.setPreferredSize(new Dimension(frame.getWidth(), 16));
+        statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
+        statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        statusLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        statusPanel.add(statusLabel);
+
+
         // Text Field
         textarea.setEditable(true);
+        textarea.addCaretListener(this);
         editorScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         editorScrollPane.setPreferredSize(new Dimension(250,145));
         editorScrollPane.setMinimumSize(new Dimension(10,10));
@@ -79,10 +93,12 @@ public class Landing implements ActionListener {
         textarea.setMargin(new Insets(2, 5, 2, 5));
         textarea.setFont(new Font("Arial", Font.PLAIN, 14));
         
+        
         frame.setJMenuBar(mb);
-        frame.setLayout(null);
+        frame.setLayout(new BorderLayout());
         frame.setLocationRelativeTo(null);
-        frame.setContentPane(editorScrollPane);
+        frame.add(editorScrollPane, BorderLayout.CENTER);
+        frame.add(statusPanel, BorderLayout.SOUTH);
 
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -152,5 +168,19 @@ public class Landing implements ActionListener {
         }
     }
 
+    @Override
+    public void caretUpdate(CaretEvent e) {
+        int caretPos = textarea.getCaretPosition();
+        int lineNumber = 0;
+        int colNumber = 0;
+        try {
+            lineNumber = textarea.getLineOfOffset(caretPos) + 1;
+            colNumber = caretPos - textarea.getLineStartOffset(lineNumber - 1) + 1;
+        } catch (BadLocationException ex) {
+            ex.printStackTrace();
+        }
+        // Implement logic to display or handle the line number as required
+        statusLabel.setText("Line: " + lineNumber + " Column: " + colNumber);
+    }
 
 }
